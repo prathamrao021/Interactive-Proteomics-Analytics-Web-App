@@ -1,4 +1,4 @@
-# NVS Proteomics log2FC Heatmap and Interactive Gene Filter
+# Proteomics log2FC Heatmap and Interactive Gene Filter
 
 An end-to-end workflow to visualize pairwise log2 fold-changes from a MaxQuant-style proteomics workbook and interactively extract gene lists by column-wise thresholds. The script normalizes headers, validates intensity columns, computes log2FC for chosen contrasts across time points, collapses duplicate genes, and renders a Plotly heatmap with rich hover details. The generated standalone HTML includes a filter panel, column-wise sorting, “click to copy” helpers, and CSV export.
 
