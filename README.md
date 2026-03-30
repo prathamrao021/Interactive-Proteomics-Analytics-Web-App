@@ -58,7 +58,7 @@ Dynamic_Venn.ipynb:
 - matplotlib-venn
 - ipywidgets (optional, if interactive widgets are used)
 
-### Install with pip
+## Installation
 ```bash
 python -m venv .venv
 # macOS/Linux
