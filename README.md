@@ -1,6 +1,6 @@
-# Proteomics log2FC Heatmap and Interactive Gene Filter
+# NVS Proteomics log2FC Heatmap and Interactive Gene Filter
 
-An end-to-end workflow to visualize pairwise log2 fold-changes from a MaxQuant-style proteomics workbook and interactively extract gene lists by column-wise thresholds. The script normalizes headers, validates intensity columns, computes log2FC for chosen contrasts across time points, collapses duplicate genes, and renders a Plotly heatmap with rich hover details. The generated standalone HTML includes a filter panel, column-wise sorting, “click to copy” helpers, and CSV export.
+An end-to-end workflow to visualize pairwise log2 fold-changes from a MaxQuant-style proteomics workbook and interactively extract gene lists by column-wise thresholds. The script normalizes headers, validates intensity columns, computes log2FC for chosen contrasts across time points, collapses duplicate genes, and renders a Plotly heatmap with rich hover details. The generated standalone HTML includes a filter panel, column-wise sorting, “click to copy” helpers, and CSV export. A companion notebook, Dynamic_Venn.ipynb, lets you compare exported gene lists via interactive Venn diagrams.
 
 ---
 
@@ -14,6 +14,7 @@ An end-to-end workflow to visualize pairwise log2 fold-changes from a MaxQuant-s
 - [Output](#output)
 - [How It Works](#how-it-works)
 - [User Interface Guide](#user-interface-guide)
+- [Dynamic_Venn.ipynb](#dynamic_vennipynb)
 - [Customization](#customization)
 - [Troubleshooting](#troubleshooting)
 - [FAQ](#faq)
@@ -34,15 +35,28 @@ An end-to-end workflow to visualize pairwise log2 fold-changes from a MaxQuant-s
   - Dropdown to sort rows ascending/descending by any contrast/time column.
   - Hover tooltip that shows gene, contrast/time, log2FC, protein name, and only the two raw intensity values used for that cell’s log2FC.
 - Filter panel (client-side):
-  - Choose a single column, pick direction (> or <), set cutoff, and list matching genes.
+  - Choose a column, pick direction (> or <), set cutoff, and list matching genes.
   - Copy-friendly table (click a header to copy the entire column), CSV download.
   - A “Copy” button near the summary that copies only “COLUMN, >/< CUTOFF, NVS”.
+- Companion analysis: Dynamic_Venn.ipynb for interactive Venn comparisons of exported gene lists.
 
 ---
 
 ## Requirements
 - Python 3.9+ recommended
-- Packages: `numpy`, `pandas`, `plotly`, `openpyxl` (for .xlsx)
+
+Core script:
+- numpy
+- pandas
+- plotly
+- openpyxl (for .xlsx)
+
+Dynamic_Venn.ipynb:
+- jupyter
+- pandas
+- matplotlib
+- matplotlib-venn
+- ipywidgets (optional, if interactive widgets are used)
 
 ### Install with pip
 ```bash
@@ -53,6 +67,8 @@ source .venv/bin/activate
 # .venv\Scripts\activate
 
 pip install numpy pandas plotly openpyxl
+# For Dynamic_Venn.ipynb:
+pip install jupyter matplotlib matplotlib-venn ipywidgets
 ```
 
 ---
@@ -80,7 +96,6 @@ Row labeling:
 ---
 
 ## Configuration
-At the top of the script:
 ```python
 INPUT_PATH = "/path/to/MaxQuant-analysis_all NVS.xlsx"
 OUTPUT_HTML = "/path/to/NVS_Proteomics.html"
@@ -105,21 +120,16 @@ CONTRASTS = [
 ]
 ```
 
-Notes:
-- Preprocessing multiplies each of the 12 intensity columns by 1000 and replaces exact zeros with 0.001 (edit in the script if your data scale differs).
-- COLOR_RANGE sets symmetric zmin/zmax for the diverging color scale.
-
 ---
 
 ## Running
-From a terminal:
 ```bash
 python your_script_name.py
 ```
 
 The script writes a single HTML file to `OUTPUT_HTML`. Open it in any modern browser.
 
-Tip: Ensure the last line reads exactly:
+Tip: Ensure the last lines read:
 ```python
 if __name__ == "__main__":
     main()
@@ -154,7 +164,7 @@ if __name__ == "__main__":
 
 5. Hover metadata (customdata):
    - For each cell, packs `[Protein, A_value, B_value, "A time", "B time"]`.
-   - Hover template renders only the two raw inputs used for that cell’s log2FC, keeping tooltips concise.
+   - Hover template renders only the two raw inputs used for that cell’s log2FC.
 
 6. Sorting views:
    - Precomputes ascending/descending row indices per column, pushing NaNs to bottom.
@@ -187,6 +197,42 @@ Filter panel:
 
 ---
 
+## Dynamic_Venn.ipynb
+
+Purpose  
+Interactive Venn analysis to compare gene sets (e.g., lists exported from the heatmap filter) and extract intersections/unique sets.
+
+Requirements  
+- Jupyter Notebook  
+- pandas, matplotlib, matplotlib-venn  
+- Optional: ipywidgets for UI controls
+
+Install (if needed)  
+```bash
+pip install jupyter pandas matplotlib matplotlib-venn ipywidgets
+```
+
+Inputs  
+- Gene lists pasted directly into notebook cells or loaded from CSVs exported by the heatmap page (Download CSV).  
+- Each list should be a 1‑column file or a Python list of gene symbols.
+
+How to run  
+1. Launch Jupyter: `jupyter notebook Dynamic_Venn.ipynb`  
+2. Run all cells.  
+3. Provide 2–3 gene sets (A, B, C) via the input cells/widgets.  
+4. The notebook renders a Venn diagram and prints the counts and the exact gene names for intersections and unique regions.
+
+Outputs  
+- Venn diagram (inline).  
+- Printed tables of intersection/unique genes; cells include code to export selected regions to CSV (e.g., A∩B, A\B, etc.).  
+- Optional: saves figures to PNG/SVG if enabled in the notebook.
+
+Notes  
+- Gene symbols are case‑sensitive by default; normalize (e.g., `str.upper()`) if needed.  
+- If you have >3 sets, consider UpSet plots (e.g., via `upsetplot`) or pairwise overlap tables instead of a Venn.
+
+---
+
 ## Customization
 - Conditions, time points, contrasts:
   - Edit `CONDITIONS`, `TIMES`, and `CONTRASTS` to match your study.
@@ -205,10 +251,10 @@ Filter panel:
 
 - Hover content variants:
   - Current setup shows only the two raw inputs used for each cell.
-  - To show all 12 raw intensities instead, build `customdata` with all 12 values and update the `hovertemplate` accordingly.
+  - To show all 12 raw intensities instead, build `customdata` with all 12 values and update the `hovertemplate`.
 
 - Filter panel enhancements (optional):
-  - Multi-column union/intersection, Top-N, or in-table search can be added in JS.
+  - Multi-column union/intersection, Top-N, in-table search, or copy-to-clipboard snippets for multiple columns.
 
 ---
 
@@ -242,7 +288,7 @@ Filter panel:
   - NaNs are placed at the bottom for both ascending and descending sorts.
 
 - Can I change which raw values are shown on hover?
-  - Yes. The code maps each heatmap column “A vs B | t” back to “A t” and “B t”, and places only those two in `customdata`. You can include more or fewer fields by editing that builder and the `hovertemplate`.
+  - Yes. The code maps each heatmap column “A vs B | t” back to “A t” and “B t”, and places only those two in `customdata`.
 
 ---
 
@@ -254,19 +300,19 @@ Filter panel:
 ---
 
 ## Project Structure
-Single-file script that:
-- Loads Excel, normalizes headers, validates columns.
-- Preprocesses intensities and computes the gene × contrast/time log2FC matrix.
-- Builds Plotly heatmap, sorting controls, and hover metadata.
-- Writes a self-contained HTML with a filter panel and export utilities.
+- Single-file script that:
+  - Loads Excel, normalizes headers, validates columns.
+  - Preprocesses intensities and computes the gene × contrast/time log2FC matrix.
+  - Builds Plotly heatmap, sorting controls, and hover metadata.
+  - Writes a self-contained HTML with a filter panel and export utilities.
+- Notebook:
+  - Dynamic_Venn.ipynb for downstream comparison of exported gene lists via Venn diagrams.
 
-You may optionally break it into modules:
+You may optionally modularize into:
 - io.py (loading/normalization), compute.py (log2FC, aggregation), viz.py (heatmap + html), app.py (entrypoint).
 
 ---
 
 ## License and Attribution
-- Uses open-source libraries (`numpy`, `pandas`, `plotly`). Review their licenses for redistribution.
+- Uses open-source libraries (`numpy`, `pandas`, `plotly`, `matplotlib`, `matplotlib-venn`). Review their licenses for redistribution.
 - If you use this visualization in a publication, consider citing Plotly and the data processing tools you relied on.
-
-If you want, I can tailor this README with lab-specific wording, add screenshots, or include a small sample dataset for quick testing.
